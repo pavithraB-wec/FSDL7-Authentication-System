@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Create account</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            min-height: 100vh;
+            margin: 0;
+            display: grid;
+            place-items: center;
+            padding: 24px;
+            background: #f3f4f6;
+            color: #111827;
+            font: 16px/1.5 system-ui, sans-serif;
+        }
+        main {
+            width: min(100%, 400px);
+            padding: 32px;
+            border-radius: 12px;
+            background: #fff;
+            box-shadow: 0 10px 30px rgb(0 0 0 / 8%);
+        }
+        h1 { margin: 0 0 8px; }
+        p { margin: 0 0 24px; color: #4b5563; }
+        label { display: block; margin: 16px 0 6px; font-weight: 600; }
+        input, button {
+            width: 100%;
+            padding: 11px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font: inherit;
+        }
+        button {
+            margin-top: 22px;
+            border: 0;
+            background: #2563eb;
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        button:disabled { cursor: wait; opacity: .7; }
+        #message { margin: 16px 0 0; overflow-wrap: anywhere; }
+        #message.error { color: #b91c1c; }
+        #message.success { color: #166534; }
+    </style>
+</head>
+<body>
+    <main>
+        <h1>Create account</h1>
+        <p>Register with your email and a password of at least 6 characters.</p>
+        <form id="register-form">
+            <label for="email">Email</label>
+            <input id="email" name="email" type="email" autocomplete="email" required>
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" autocomplete="new-password" minlength="6" required>
+            <button type="submit">Register</button>
+        </form>
+        <p id="message" role="status" aria-live="polite"></p>
+        <p>Already have an account? <a href="/">Sign in</a></p>
+    </main>
+    <script>
+        const form = document.querySelector("#register-form");
+        const message = document.querySelector("#message");
+
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const button = form.querySelector("button");
+            button.disabled = true;
+            message.className = "";
+            message.textContent = "Creating account...";
+
+            try {
+                const response = await fetch("/register", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        email: form.elements.email.value,
+                        password: form.elements.password.value
+                    })
+                });
+                const result = await response.json();
+                if (!response.ok) {
+                    throw new Error(result.error || "Registration failed.");
+                }
+
+                message.className = "success";
+                message.textContent = `${result.message} You can now sign in.`;
+                form.reset();
+            } catch (error) {
+                message.className = "error";
+                message.textContent = error.message || "Unable to create account.";
+            } finally {
+                button.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
